@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Letters for Yashi ❤️</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #ffe6ea 0%, #ffccd5 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #4a4a4a;
+      font-family: 'Georgia', serif;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Floating Hearts */
+    .hearts-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .floating-heart {
+      position: absolute;
+      color: #ff4d6d;
+      font-size: 20px;
+      pointer-events: none;
+      animation: floatUp 5s linear forwards;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(100vh) scale(0.6); opacity: 0; }
+      20% { opacity: 0.9; }
+      100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+    }
+
+    /* Start Overlay Card - Clean White */
+    #start-card {
+      position: absolute;
+      z-index: 10;
+      background: #ffffff;
+      padding: 40px 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 77, 109, 0.2);
+      box-shadow: 0 10px 30px rgba(255, 77, 109, 0.2);
+      max-width: 90%;
+      width: 380px;
+    }
+
+    .pulse-heart {
+      font-size: 65px;
+      color: #ff4d6d;
+      animation: heartbeat 1.2s infinite ease-in-out;
+      cursor: pointer;
+    }
+
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      14% { transform: scale(1.25); }
+      28% { transform: scale(1); }
+      42% { transform: scale(1.25); }
+      70% { transform: scale(1); }
+    }
+
+    /* Main Love Letter Container - White Card */
+    #letter-container {
+      display: none;
+      z-index: 5;
+      max-width: 90%;
+      width: 380px;
+      min-height: 400px;
+      background: #ffffff;
+      border: 1px solid rgba(255, 77, 109, 0.2);
+      border-radius: 20px;
+      padding: 25px 20px;
+      box-shadow: 0 15px 35px rgba(255, 77, 109, 0.25);
+      position: relative;
+    }
+
+    .card-header {
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      color: #ff4d6d;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    /* Text Container Alignment Fix */
+    .text-wrapper {
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+    }
+
+    .letter-text {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #333333;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      text-align: center;
+    }
+
+    /* Pink Navigation Button */
+    .nav-btn {
+      margin-top: 25px;
+      background: linear-gradient(135deg, #ff4d6d, #ff758c);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 77, 109, 0.4);
+      transition: all 0.3s ease;
+      font-family: 'Georgia', serif;
+      font-weight: bold;
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 20px rgba(255, 77, 109, 0.6);
+    }
+
+    .progress-bar {
+      font-size: 0.8rem;
+      color: #ff4d6d;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Canvas -->
+  <canvas id="galaxy"></canvas>
+
+  <!-- Piano Audio Track -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-piano-112181.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Start Trigger Card -->
+  <div id="start-card">
+    <div class="pulse-heart" onclick="startLetters()">💌</div>
+    <h2 style="margin-top: 15px; font-weight: normal; color: #ff4d6d;">Letters For Yashi</h2>
+    <p style="margin-top: 8px; font-size: 0.85rem; color: #ff758c;">Tap the envelope to open ❤️</p>
+  </div>
+
+  <!-- Main Letter Envelope Deck -->
+  <div id="letter-container">
+    <div class="card-header" id="card-header">Letter 1</div>
+    <div class="text-wrapper">
+      <div class="letter-text" id="letter-text"></div>
+    </div>
+    <button class="nav-btn" onclick="nextLetter()" id="next-btn">Read Next Letter ❤️</button>
+    <div class="progress-bar" id="progress-bar">1 / 62</div>
+  </div>
+
+  <div class="hearts-container" id="hearts-container"></div>
+
+  <script>
+    // --- 1. Soft Floating Particle Background ---
+    const canvas = document.getElementById('galaxy');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    for(let i = 0; i < 80; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2,
+        alpha: Math.random() * 0.5,
+        speed: Math.random() * 0.01
+      });
+    }
+
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(star => {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 77, 109, ${star.alpha})`;
+        ctx.fill();
+        star.alpha += star.speed;
+        if(star.alpha > 0.6 || star.alpha < 0.1) star.speed = -star.speed;
+      });
+      requestAnimationFrame(drawStars);
+    }
+    drawStars();
+
+    // --- 2. Floating Hearts ---
+    function createHeart() {
+      const container = document.getElementById("hearts-container");
+      const heart = document.createElement('div');
+      heart.className = 'floating-heart';
+      heart.innerHTML = ['❤️', '💖', '✨', '💕'][Math.floor(Math.random() * 4)];
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.bottom = '-20px';
+      heart.style.fontSize = (Math.random() * 15 + 15) + 'px';
+      container.appendChild(heart);
+      setTimeout(() => heart.remove(), 5000);
+    }
+
+    // --- 3. Love Letter Text Messages Deck ---
+    const letters = [
+      "Jaan, tumne aaj mujhse jo pucha na — “Aap mujhe itna pasand kyun karte ho? Aisa kya hai mujhme?” — sach bataun, tumne ek bahut simple sa question poocha hai, lekin mere liye iska answer bilkul simple nahi hai. ❤️",
+      "Main kaafi der se soch raha hoon ki tumhe iska answer exactly kaise doon, kyunki jo main tumhare liye feel karta hoon na, usko kuch lines mein explain karna genuinely mushkil hai.",
+      "Sabse pehle ek baat clear kar doon...\n\nMain tumhe sirf pasand nahi karta. Main tumse pyaar karta hoon. ❤️",
+      "Aur mere liye ye dono words bahut alag hain.",
+      "Kisi ko pasand karna shayad uski kisi ek quality ki wajah se ho sakta hai. Kisi ki smile achhi lagti hai, kisi ka nature achha lagta hai, kisi se baat karna achha lagta hai...",
+      "Lekin tumhare saath mujhe kabhi aisa nahi laga ki “mujhe Jaan ki ye ek cheez pasand hai.”",
+      "Mere liye to...\n\nMujhe Jaan pasand hai.\nTumhari har chhoti-badi cheez ke saath. ❤️",
+      "Tum jis tarah baat karti ho, jis tarah kabhi randomly kuch bol deti ho, jis tarah care karti ho, jis tarah meri baaton ko sunti ho, jis tarah kabhi mujhe samajhne ki koshish karti ho...",
+      "Pata nahi kab ye sab mere liye normal cheezein nahi rahi. Ye sab special ho gaya.",
+      "Aur sabse funny baat pata hai? Shayad tumhe khud bhi realize nahi hai ki tumhari kitni saari chhoti-chhoti baatein mere liye important hain.",
+      "Kabhi tumhara ek simple sa message mera mood change kar deta hai.",
+      "Kabhi tumse 5 minute baat karke bhi lagta hai ki din thoda better ho gaya.",
+      "Kabhi tumhari koi random si baat yaad aa jaati hai aur main bina reason smile kar deta hoon.",
+      "Kabhi phone uthata hoon aur automatically check karta hoon ki tumhara message aaya hai ya nahi.",
+      "Aur kabhi tumse baat nahi hoti to pata nahi kyun din mein ek empty sa feeling reh jaata hai.",
+      "Isliye main tumhe miss karta hoon. Bahut zyada.",
+      "Sirf isliye nahi ki tum mere saamne nahi hoti... Balki isliye kyunki tumhari presence meri life mein mere liye genuinely important hai. ❤️",
+      "Tumse baat karna mere liye sirf ek habit nahi hai.",
+      "Tum meri life ki un feelings ka part ban gayi ho jinke bina cheezein thodi incomplete si lagti hain.",
+      "Koi achhi news ho to mann karta hai tumhe bataun. Koi funny cheez ho to mann karta hai tumhare saath share karun. Kuch tension ho to tumse baat karne ka mann karta hai.",
+      "Aur kabhi koi reason bhi nahi hota... Tab bhi bas tumse baat karne ka mann karta hai. Bas tumse.",
+      "Aur shayad isi ko main explain karne ki koshish kar raha hoon jab tum poochti ho ki “aisa kya hai mujhme?”",
+      "Tum mein shayad koi ek magical quality nahi hai. Tumhare andar tum ho. Aur mere liye wahi enough hai. ❤️",
+      "Mujhe tumhari perfection nahi chahiye. Mujhe tumhara koi imaginary perfect version nahi chahiye. Mujhe tumhe badalna nahi hai. Mujhe bas tum jaisi ho waisi achhi lagti ho.",
+      "Tumhari smile ke saath. Tumhare moods ke saath. Tumhari random baaton ke saath. Tumhari little mistakes ke saath. Tumhari achhi qualities ke saath. Tumhari imperfections ke saath.",
+      "Kyuki ye sab alag-alag cheezein nahi hain... Ye sab milkar Jaan banti ho. ❤️",
+      "Aur mujhe Jaan pasand hai. Bahut zyada.",
+      "Ek aur cheez jo tumhare liye meri feelings ko aur strong banati hai — trust. Main tum par bahut trust karta hoon.",
+      "Har kisi ke saamne apni feelings openly express kar paana mere liye easy nahi hai. Lekin tumhare saamne mujhe lagta hai ki main apne thoughts ko hide kiye bina reh sakta hoon.",
+      "Main apne stupid thoughts bhi share kar sakta hoon. Apni excitement bhi. Apni problems bhi. Apni happiness bhi. Aur apni feelings bhi.",
+      "Tumhare saamne mujhe kisi aur version ka act nahi karna padta. Main bas main reh sakta hoon. Aur mere liye ye bahut badi baat hai.",
+      "Duniya mein bahut log milte hain. Bahut logon se baat hoti hai. Lekin har kisi ke saath woh comfort, woh connection aur woh trust feel nahi hota jo main tumhare saath feel karta hoon.",
+      "Isliye tum mere liye different ho. Tum meri first priorities mein se ek ho. ❤️",
+      "Tumhari happiness mere liye matter karti hai. Tum upset hoti ho to mujhe genuinely bura lagta hai. Tum khush hoti ho to mujhe genuinely achha lagta hai.",
+      "Tumhari problems ko main ignore nahi karna chahta. Tumhari feelings ko main lightly nahi lena chahta. Aur tumhare saath jo bhi ho, main chahta hoon ki tumhe hamesha ye feel ho ki tumhari feelings matter karti hain. ❤️",
+      "Aur Jaan... Kabhi-kabhi main sochta hoon ki agar tum meri life mein nahi aati to shayad main kabhi realize hi nahi karta ki kisi ek person ki presence itni important kaise ho sakti hai.",
+      "Tumne mujhe ye realize karaya ki kisi ko miss karna sirf uske paas na hone ki feeling nahi hoti...",
+      "Kabhi-kabhi kisi ko miss karna matlab hota hai... Uske saath apni normal si life share karne ki wish. Uski awaaz sunne ka mann. Usse random baatein karne ka mann. Uske saath apni happiness share karne ka mann. Uske upset hone par usse smile karwane ka mann. Aur bas ye feel karna ki... “Haan, ye person meri life mein hai.” ❤️",
+      "Tumhare liye meri feelings exactly isi tarah ki hain. ❤️",
+      "Main ye nahi bolunga ki tum meri duniya ki eklauti important person ho, kyunki meri life mein family aur doosre apne log bhi apni jagah important hain.",
+      "Lekin tumhare liye jo love, trust, care aur connection mere dil mein hai, woh definitely mere liye bahut special hai. Aur main us feeling ko kisi aur se compare bhi nahi karna chahta. Tumhari jagah tumhari hai. Kisi aur se replace nahi ki ja sakti. ❤️",
+      "Aur shayad isi wajah se jab tum poochti ho... “Aap mujhe itna pasand kyun karte ho?”",
+      "To main honestly bolna chahta hoon: Mujhe tumhari smile pasand hai... Lekin sirf smile nahi. Mujhe tumhari baatein pasand hain... Lekin sirf baatein nahi. Mujhe tumhara nature pasand hai... Lekin sirf nature nahi. Mujhe tumhara care karna pasand hai... Lekin sirf care nahi.",
+      "Mujhe tum pasand ho. Tumhara hona pasand hai. Tumhara meri life ka part hona pasand hai. Tumse baat karna pasand hai. Tumhari yaad aana pasand hai. Tumhari fikr karna pasand hai. Tumhari happiness ke liye genuinely care karna pasand hai. Aur sabse zyada... Tumse pyaar karna pasand hai. ❤️",
+      "Kabhi-kabhi main ye bhi sochta hoon ki main tumhe itna miss kyun karta hoon. Aur answer simple hai. Because I love you.",
+      "Jab kisi ki presence dil ke itne close ho jaati hai na, to uski absence automatically feel hoti hai. Isliye tumse baat na ho to tum yaad aati ho. Isliye tum busy hoti ho to bhi kabhi-kabhi tumhara message check karta hoon.",
+      "Isliye tumhari koi purani baat yaad aati hai to smile aa jaati hai. Isliye kabhi random moment mein bhi tumhara naam mind mein aa jata hai. Tum meri thoughts mein bina permission ke aa jaati ho. 😂❤️",
+      "Aur honestly, mujhe iski complaint bhi nahi hai. Mujhe achha lagta hai ki meri life mein koi aisa hai jiske liye mere dil mein itni genuine feelings hain.",
+      "Aur Jaan, main tumse ek aur cheez kehna chahta hoon... Main tumse pyaar isliye nahi karta kyunki mujhe tumse kuch chahiye. Main tumse pyaar karta hoon kyunki tum mere liye important ho.",
+      "Main tumhari happiness ko value karta hoon. Main tumhari individuality ko value karta hoon. Main tumhari feelings ko value karta hoon. Aur main chahta hoon ki tum mere saath hamesha comfortable feel karo. Mujhe tumhe possess karna nahi hai. Mujhe tumhe control nahi karna hai.",
+      "Mujhe bas tumhare saath woh bond maintain karna hai jahan hum dono ek-doosre ke saath apne real selves reh sakein. Jahan trust ho. Respect ho. Care ho. Understanding ho. Aur bahut saara pyaar ho. ❤️",
+      "Aur agar kabhi tumhe lage ki main tumhe unnecessarily zyada importance deta hoon... To haan. Deta hoon. Kyuki mere liye tum important ho. Agar kabhi lage ki main tumhe zyada miss karta hoon... To haan. Karta hoon. Kyuki tum mere dil ke bahut close ho. Agar kabhi lage ki main tumhari chhoti si baat bhi seriously le leta hoon... To haan. Leta hoon. Kyuki tumhari feelings mere liye matter karti hain.",
+      "Aur agar kabhi tum phir poochogi... “Aisa kya hai mujhme?” To main shayad tumhe phir bhi perfect answer nahi de paunga. Because love ka koi proper formula nahi hota. Kisi spreadsheet mein calculate nahi kar sakte. Kisi list mein reasons likhkar prove nahi kar sakte. Bas feel hota hai. Aur main tumhare liye woh feel karta hoon. Bahut deeply. ❤️",
+      "Tum meri life mein ek beautiful feeling ki tarah aayi ho. Aur main genuinely grateful hoon ki meri life mein tum ho. Main nahi jaanta future exactly kaisa hoga. Main ye bhi nahi jaanta ki life humein kitne different situations se guzaregi. Lekin aaj jo main feel karta hoon, woh bilkul genuine hai.",
+      "I love you, Jaan. Aur main tumhe sirf aaj nahi... Har us din appreciate karna chahta hoon jab tum meri life mein ho. Main tumhe sirf good moments mein nahi, tumhare difficult moments mein bhi understand karne ki koshish karna chahta hoon.",
+      "Main tumhari smile ka reason banna chahta hoon, tumhari life ka pressure nahi. Main tumhare liye ek aisa person banna chahta hoon jiske saath tumhe safe, respected aur comfortable feel ho.",
+      "Aur agar meri feelings ko ek sentence mein explain karna ho... To shayad main bas itna kahunga:\n\n“Jaan, mujhe tum mein koi ek cheez nahi mili jisse main tumse pyaar karta hoon... mujhe tum mili, aur pata hi nahi chala kab tum mere liye itni important ban gayi.” ❤️",
+      "Tum meri favourite person ho. Tumhari jagah mere dil mein alag hai. Tumhara naam mere phone mein ek contact ho sakta hai... Lekin meri feelings mein tum sirf ek naam nahi ho. Tum ek emotion ho. ❤️",
+      "Aur haan... Agar kabhi main tumhe bata na paun ki main tumhe kitna miss karta hoon... To meri silence ko samajhne ki koshish karna. Kyuki kabhi-kabhi words kam pad jaate hain. Aur agar kabhi main tumhe unnecessarily yaad karun... To bas smile kar dena. Kyunki kahin na kahin, us moment mein main tumhe yaad kar raha hounga. 🥺❤️",
+      "So, “Aisa kya hai mujhme?” ka final answer:\n\nPata nahi Jaan... shayad kuch bhi nahi. Aur shayad sab kuch. Kyunki tum mein jo bhi hai, woh mere liye enough hai. Tumhe kisi aur jaisa banne ki zarurat nahi. Tumhe perfect hone ki zarurat nahi. Tumhe mujhe impress karne ki zarurat nahi.",
+      "Bas meri Yashi rehna. Kyuki mujhe... Mujhe meri yehi Yashi pasand hai. ❤️ Aur sirf pasand nahi... Mujhe meri isi Yashi se pyaar hai. 🫶❤️",
+      "I love you. I trust you. I care about you. I miss you. Aur sabse important — I genuinely value you. ❤️\n\nTum mere liye bahut, bahut special ho. 🥺❤️"
+    ];
+
+    let currentIndex = 0;
+    let charIndex = 0;
+    let typingTimer;
+
+    function startLetters() {
+      document.getElementById('start-card').style.display = 'none';
+      document.getElementById('letter-container').style.display = 'block';
+      
+      const audio = document.getElementById('bg-music');
+      audio.volume = 0.5;
+      audio.play().catch(err => {
+        console.log("Audio play blocked, user interaction required:", err);
+      });
+
+      setInterval(createHeart, 350);
+      showLetter();
+    }
+
+    function showLetter() {
+      const textElem = document.getElementById('letter-text');
+      const headerElem = document.getElementById('card-header');
+      const progressElem = document.getElementById('progress-bar');
+      const nextBtn = document.getElementById('next-btn');
+
+      headerElem.innerText = `Letter ${currentIndex + 1}`;
+      progressElem.innerText = `${currentIndex + 1} / ${letters.length}`;
+      textElem.textContent = '';
+      charIndex = 0;
+      clearTimeout(typingTimer);
+
+      if (currentIndex === letters.length - 1) {
+        nextBtn.innerText = "❤️ Always & Forever ❤️";
+      } else {
+        nextBtn.innerText = "Read Next Letter ❤️";
+      }
+
+      typeEffect();
+    }
+
+    /* Typing Effect */
+    function typeEffect() {
+      const currentText = letters[currentIndex];
+      const textElem = document.getElementById('letter-text');
+
+      if (charIndex < currentText.length) {
+        textElem.textContent += currentText.charAt(charIndex);
+        charIndex++;
+        typingTimer = setTimeout(typeEffect, 30);
+      }
+    }
+
+    function nextLetter() {
+      if (currentIndex < letters.length - 1) {
+        currentIndex++;
+        showLetter();
+      } else {
+        currentIndex = 0;
+        showLetter();
+      }
+    }
+  </script>
+</body>
+</html>
